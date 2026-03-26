@@ -1,48 +1,92 @@
 import xmlrpc.client
 from app.utils.config import config
 
-ODOO_URL = config.get("odoo", "url")
-ODOO_DB = config.get("odoo", "db")
-ODOO_USERNAME = config.get("odoo", "username")
-ODOO_PASSWORD = config.get("odoo", "password")
-
 
 class OdooClient:
     def __init__(self):
-        self.common = xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/common")
+        # Load config
+        self.url = config.get("odoo", "url")
+        self.db = config.get("odoo", "db")
+        self.username = config.get("odoo", "username")
+        self.password = config.get("odoo", "password")
+
+        # Setup XML-RPC endpoints
+        self.common = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/common")
+        self.models = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
+
+        # Authenticate
         self.uid = self.common.authenticate(
-            ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD, {}
+            self.db,
+            self.username,
+            self.password,
+            {}
         )
 
-        self.models = xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/object")
+        if not self.uid:
+            raise Exception("Authentication failed. Check credentials.")
 
     def get_new_tickets(self):
-        return self.models.execute_kw(
-            ODOO_DB,
-            self.uid,
-            ODOO_PASSWORD,
-            "helpdesk.ticket",
-            "search_read",
-            [[]],
-            {
-                "fields": [
-                    "id",
-                    "name",
-                    "description",
-                    "stage_id",
-                    "user_id"
-                ]
-            },
-        )
+        """
+        Fetch tickets from Odoo
+        (Currently fetching all tickets — filtering will be added later)
+        """
+        try:
+            tickets = self.models.execute_kw(
+                self.db,
+                self.uid,
+                self.password,
+                "helpdesk.ticket",
+                "search_read",
+                [[]],  # later: add stage filter
+                {
+                    "fields": [
+                        "id",
+                        "name",
+                        "description",
+                        "stage_id",
+                        "user_id"
+                    ]
+                },
+            )
 
-    def update_ticket(self, ticket_id, message):
-        stage_id = config.get("odoo", "resolved_stage_id")
+            return tickets
 
-        self.models.execute_kw(
-            ODOO_DB,
-            self.uid,
-            ODOO_PASSWORD,
-            "helpdesk.ticket",
-            "write",
-            [[ticket_id], {"description": message, "stage_id": stage_id}],
-        )
+        except Exception as e:
+            raise Exception(f"Error fetching tickets: {e}")
+
+    def get_stages(self):
+        """
+        Fetch all helpdesk stages (useful for debugging stage IDs)
+        """
+        try:
+            stages = self.models.execute_kw(
+                self.db,
+                self.uid,
+                self.password,
+                "helpdesk.stage",
+                "search_read",
+                [[]],
+                {"fields": ["id", "name"]},
+            )
+
+            return stages
+
+        except Exception as e:
+            raise Exception(f"Error fetching stages: {e}")
+
+    def update_ticket(self, ticket_id, values):
+        """
+        Update a ticket (will be used later when agents act)
+        """
+        try:
+            self.models.execute_kw(
+                self.db,
+                self.uid,
+                self.password,
+                "helpdesk.ticket",
+                "write",
+                [[ticket_id], values],
+            )
+
+        except Exception as e:
+            raise Exception(f"Error updating ticket {ticket_id}: {e}")

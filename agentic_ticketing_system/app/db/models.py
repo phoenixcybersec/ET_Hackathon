@@ -1,5 +1,6 @@
 from app.db.connection import get_connection
 
+
 def create_table():
     conn = get_connection()
     cursor = conn.cursor()
@@ -10,6 +11,7 @@ def create_table():
         title TEXT,
         description TEXT,
         stage TEXT,
+        assigned_to TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)

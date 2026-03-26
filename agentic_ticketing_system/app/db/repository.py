@@ -1,17 +1,19 @@
 from app.db.connection import get_connection
 
+
 def save_ticket(ticket):
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-    INSERT OR IGNORE INTO tickets (id, title, description, stage)
-    VALUES (?, ?, ?, ?)
+    INSERT OR IGNORE INTO tickets (id, title, description, stage, assigned_to)
+    VALUES (?, ?, ?, ?, ?)
     """, (
         ticket["id"],
-        ticket["name"],
-        ticket.get("description", ""),
-        str(ticket.get("stage_id"))
+        ticket["title"],
+        ticket["description"],
+        ticket["stage"],
+        ticket["assigned_to"]
     ))
 
     conn.commit()
