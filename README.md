@@ -1,15 +1,5 @@
 # SLA Agentic AI for Ticketing (L1 Resolution) – POC
 
-## Authors
-
-<div align="center">
-
-**Built by PhoenixCyberSec**
-
-Star this repo if it helped you!
-</div>
-
----
 
 ## Overview
 
