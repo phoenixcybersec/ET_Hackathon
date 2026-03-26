@@ -1,1 +1,72 @@
-.venv 
+# Environment variables
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Testing / coverage
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Jupyter notebooks (if you experiment)
+.ipynb_checkpoints/
+
+# Database files
+*.sqlite3
+*.db
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Build / distribution
+build/
+dist/
+*.egg-info/
+
+# AWS credentials (VERY IMPORTANT)
+.aws/
+credentials
+
+# Vector DB / embeddings (FAISS etc.)
+*.index
+*.faiss
+vector_store/
+
+# Temporary files
+tmp/
+temp/
+
+# Data files (optional - depends on use)
+data/knowledge_base/*
+!data/knowledge_base/.gitkeep
+
+# Local scripts outputs
+outputs/
+
+# Model artifacts (if any)
+models/
+checkpoints/
