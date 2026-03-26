@@ -70,3 +70,10 @@ outputs/
 # Model artifacts (if any)
 models/
 checkpoints/
+
+# Config overrides (if you have local config files)
+config/config.yaml 
+
+# Ignore the knowledge base data, but keep the .gitkeep file to maintain the directory structure
+agentic-ticketing-system/data/knowledge_base/*
+!agentic-ticketing-system/data/knowledge_base/.gitkeep
