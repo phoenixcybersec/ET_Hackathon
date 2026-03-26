@@ -1,0 +1,24 @@
+app:
+  name: ai-ticketing-system
+  env: dev
+
+odoo:
+  url: "https://phoenixdb.odoo.com"
+  db: "phoenixdb"
+  username: "jyotiradityaparihar@gmail.com"
+  password: "15a4a2f6cffead773e2f3731c2a2a2edf7f6aea9"
+  new_ticket_stage_id: 1
+  resolved_stage_id: 2
+
+worker:
+  poll_interval: 10
+
+bedrock:
+  region: ""
+  model_id: ""
+
+paths:
+  knowledge_base: "data/knowledge_base"
+  vector_store: "data/vector_store"
+  logs: "logs/"
+  database: "data/db/"
