@@ -1,6 +1,7 @@
 import os
+import argparse
 
-BASE_DIR = "ET"
+DEFAULT_PROJECT_NAME = "agentic-ticketing-system"
 
 structure = {
     "app": {
@@ -91,9 +92,7 @@ python-dotenv
 requests
 numpy
 scikit-learn
-""",
-    "README.md": "# AI Ticketing System\n\nPOC for multi-agent SLA automation.\n",
-    "docker-compose.yml": "",
+"""
 }
 
 
@@ -110,15 +109,38 @@ def create_structure(base_path, structure_dict):
 
 
 def main():
-    print("🚀 Creating project structure...\n")
+    parser = argparse.ArgumentParser(description="Create AI Ticketing Project Structure")
+    parser.add_argument(
+        "--path",
+        type=str,
+        default=".",
+        help="Base directory where project will be created"
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        default=DEFAULT_PROJECT_NAME,
+        help="Project folder name"
+    )
 
-    os.makedirs(BASE_DIR, exist_ok=True)
-    create_structure(BASE_DIR, structure)
+    args = parser.parse_args()
 
-    print(f"✅ Project created at: {BASE_DIR}")
-    print("\nNext steps:")
-    print("cd ai-ticketing-system")
-    print("pip install -r requirements.txt")
+    base_dir = os.path.abspath(args.path)
+    project_path = os.path.join(base_dir, args.name)
+
+    if os.path.exists(project_path):
+        print(f"⚠️  Directory '{project_path}' already exists. Please choose a different name or path.")
+        return
+    else :
+        print(f"🚀 Creating project at: {project_path}\n")
+
+        os.makedirs(project_path, exist_ok=True)
+        create_structure(project_path, structure)
+
+        print("✅ Project structure created successfully!")
+        print("\nNext steps:")
+        print(f"cd {project_path}")
+        print("pip install -r requirements.txt")
 
 
 if __name__ == "__main__":

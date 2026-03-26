@@ -1,145 +1,214 @@
 # SLA Agentic AI for Ticketing (L1 Resolution) – POC
 
+## Authors
+
+<div align="center">
+
+**Built by PhoenixCyberSec**
+
+Star this repo if it helped you!
+</div>
+
+---
+
 ## Overview
 
-This project is a proof-of-concept (POC) for an agentic AI system that automates Level 1 (L1) ticket resolution while managing SLA commitments.
+This project is a multi-agent AI system designed to automate Level 1 (L1) ticket resolution while managing SLA commitments.
 
-The system uses multiple AI agents to classify tickets, assign priorities, track SLAs, suggest solutions, and escalate when needed.
+Instead of a single AI model, the system uses multiple specialized agents coordinated by an orchestrator to simulate a real support team.
 
----
-
-## Goal
-
-* Reduce manual effort in L1 support
-* Improve SLA adherence
-* Enable smart ticket routing and resolution
+It integrates with **Odoo (Helpdesk)** as the ticketing UI and uses **AWS Bedrock** for AI capabilities.
 
 ---
 
-## Core Agents
+## What This System Does
 
-### 1. Classifier Agent
+- Automatically classifies tickets
+- Assigns SLA deadlines
+- Allocates tickets to the best-fit agent
+- Resolves simple issues automatically (L1)
+- Predicts SLA risks
+- Escalates complex cases
 
-* Reads incoming ticket text
-* Predicts:
-
-  * Priority (1–5)
-  * Category (IT / HR / Finance)
-  * Complexity (Low / Medium / High)
-
-### 2. SLA Agent
-
-* Assigns SLA deadlines based on priority
-* Tracks time
-* Flags SLA breaches
-
-### 3. Prediction Agent
-
-* Predicts risk of SLA failure
-* Uses historical patterns and workload signals
-
-### 4. Workload Agent
-
-* Assigns tickets to the best available employee
-* Considers workload and past performance
-
-### 5. Execution Agent (L1 Automation)
-
-* Suggests solutions using knowledge base (RAG)
-* Auto-resolves simple issues
-
-### 6. Escalation Agent
-
-* Escalates complex or risky tickets
-* Notifies managers or reassigns tasks
+End-to-end automation of the support lifecycle.
 
 ---
 
-## Flow
-
-1. Ticket created in Odoo
-2. Classifier Agent processes ticket
-3. SLA Agent assigns deadline
-4. Workload Agent assigns owner
-5. Execution Agent attempts resolution
-6. Prediction Agent evaluates risk
-7. Escalation Agent triggers if needed
-
----
-
-## Tech Stack (POC)
-
-* **LLM:** AWS Bedrock
-* **Ticket System:** Odoo
-* **Backend:** Python (FastAPI)
-* **Agent Framework:** LangChain / LangGraph (optional)
-* **Database:** Any (SQLite / PostgreSQL for POC)
-* **Vector Store:** FAISS / simple embedding store
-
----
-
-## Project Structure
-
+## System Architecture
 ```
-project/
-│
-├── agents/
-│   ├── classifier.py
-│   ├── sla_agent.py
-│   ├── prediction.py
-│   ├── workload.py
-│   ├── execution.py
-│   └── escalation.py
-│
-├── services/
-│   ├── odoo_client.py
-│   ├── bedrock_client.py
-│
-├── db/
-│   ├── models.py
-│   └── storage.py
-│
-├── main.py
-└── requirements.txt
+Odoo (UI)
+   |
+Backend (FastAPI / Python)
+   |
+Orchestrator (Brain)
+   |
+Multi-Agent System
+   |
+Response back to Odoo
 ```
 
 ---
 
-## Setup (POC)
+## Core Components
 
-1. Clone repo
-2. Install dependencies:
+### Orchestrator
+- Central controller of the system
+- Decides which agent runs next
+- Maintains shared state
 
+### Agents
+
+Each agent has a single responsibility:
+
+| Agent | Responsibility |
+|---|---|
+| Classifier Agent | Understands and categorizes the ticket |
+| SLA Agent | Assigns deadlines based on priority |
+| Workload Agent | Assigns ticket to the best available owner |
+| Execution Agent | Resolves ticket using RAG + LLM |
+| Prediction Agent | Detects SLA breach risk |
+| Escalation Agent | Escalates if resolution is not possible |
+
+---
+
+## Folder Structure
+
+### `app/` – Core Application
+
+#### `app/orchestrator/`
+Controls the entire workflow.
+
+- `orchestrator.py` – Main execution flow (calls agents)
+- `state.py` – Shared data between agents
+- `router.py` – Decision logic (what happens next)
+
+#### `app/agents/`
+All AI agents are defined here.
+
+- `base_agent.py` – Common structure for all agents
+
+Each subfolder represents one agent:
+
+- `classifier/` – Ticket understanding
+- `sla/` – SLA logic
+- `workload/` – Assignment logic
+- `execution/` – Resolution (primary agent)
+- `prediction/` – Risk detection
+- `escalation/` – Escalation handling
+
+Each agent reads and updates shared state.
+
+#### `app/integrations/`
+External system connectors.
+
+- `odoo/client.py` – Connect to Odoo API
+- `odoo/mapper.py` – Convert Odoo data to/from internal format
+- `bedrock/client.py` – Call AWS Bedrock models
+- `bedrock/embeddings.py` – Embeddings for RAG (vector search)
+
+#### `app/services/`
+Business logic layer.
+
+- `ticket_service.py` – Ticket handling
+- `sla_service.py` – SLA rules
+- `assignment_service.py` – Assignment logic
+
+#### `app/memory/`
+Stores agent interactions.
+
+- `session_store.py` – Current session state
+- `history.py` – Logs of decisions
+
+#### `app/db/`
+Database layer.
+
+- `models.py` – Data models
+- `repository.py` – DB operations
+- `connection.py` – DB connection
+
+#### `app/utils/`
+Common utilities.
+
+- `logger.py` – Logging
+- `config.py` – Environment configs
+- `helpers.py` – Helper functions
+
+#### `app/api/` (Optional)
+Expose backend as a service.
+
+- `routes.py` – API endpoints
+- `controllers.py` – Request handling
+
+### `data/`
+- `tickets.json` – Sample tickets
+- `knowledge_base/` – Used for RAG
+
+### `scripts/`
+- `run_worker.py` – Background worker
+- `seed_data.py` – Test data generation
+
+### `tests/`
+Basic test coverage.
+
+### Root Files
+- `.env` – Environment variables
+- `requirements.txt` – Dependencies
+- `README.md` – Documentation
+- `docker-compose.yml` – Optional container setup
+
+---
+
+## How the System Works
+
+1. Ticket is created in Odoo
+2. Backend fetches the ticket
+3. Orchestrator starts
+4. Agents run in sequence: Classifier → SLA → Workload → Execution → Prediction → Escalation (if needed)
+5. Result is sent back to Odoo
+6. Ticket is updated
+
+---
+
+## Shared State
+
+Every agent reads from and writes to a shared state object. Example:
+```json
+{
+  "ticket": "VPN not working",
+  "priority": 2,
+  "assigned_to": "Alice",
+  "resolution": "Restart VPN",
+  "risk_score": 0.3
+}
 ```
+
+---
+
+## Setup
+```bash
 pip install -r requirements.txt
 ```
 
-3. Configure AWS credentials for Bedrock
-4. Connect Odoo API (URL + API key)
-5. Run service:
-
-```
-python main.py
-```
+Configure the following credentials:
+- AWS Bedrock
+- Odoo API
 
 ---
 
 ## Notes
 
-* This is a POC, not production-ready
-* Accuracy depends on data quality
-* RAG performance depends on knowledge base
+- This is a proof of concept (POC) and is not production-hardened
+- Focus is on architecture and flow
+- Accuracy improves with better training data
 
 ---
 
-## Future Improvements
+## Why This Project Stands Out
 
-* Fine-tuned models for classification
-* Better SLA prediction models
-* UI dashboard for monitoring
-* Feedback loop for continuous learning
-
----
+- True multi-agent system, not a simple chatbot
+- Real-world integration with Odoo
+- End-to-end automation from intake to resolution
+- Built-in decision-making and escalation logic
 
 ## Authors
 
