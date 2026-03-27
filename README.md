@@ -1,210 +1,195 @@
-# SLA Agentic AI for Ticketing (L1 Resolution) – POC
-
+# Agentic SLA System
 
 ## Overview
 
-This project is a multi-agent AI system designed to automate Level 1 (L1) ticket resolution while managing SLA commitments.
+This project implements an agentic, multi-step incident management system designed to detect system failures, predict SLA risks, and autonomously execute remediation workflows with minimal human intervention.
 
-Instead of a single AI model, the system uses multiple specialized agents coordinated by an orchestrator to simulate a real support team.
-
-It integrates with **Odoo (Helpdesk)** as the ticketing UI and uses **AWS Bedrock** for AI capabilities.
+The system integrates monitoring, ticketing, and multi-agent orchestration to create a closed-loop workflow that ensures faster resolution and SLA compliance while maintaining a complete audit trail.
 
 ---
 
-## What This System Does
+## Key Capabilities
 
-- Automatically classifies tickets
-- Assigns SLA deadlines
-- Allocates tickets to the best-fit agent
-- Resolves simple issues automatically (L1)
-- Predicts SLA risks
-- Escalates complex cases
-
-End-to-end automation of the support lifecycle.
+* Automated incident detection from monitoring systems
+* Automatic ticket creation without manual input
+* Multi-agent orchestration for analysis, decision-making, execution, and verification
+* SLA risk prediction and prioritization
+* Autonomous remediation using predefined playbooks
+* Human-in-the-loop fallback for low-confidence scenarios
+* End-to-end audit logging for traceability and compliance
 
 ---
 
 ## System Architecture
+
+The system follows a structured workflow:
+
+Monitoring → Alert Handling → Ticket Creation → Agent Orchestration → Analysis → Decision → Execution → Verification → Ticket Update → Audit Logging
+
+Refer to the architecture diagram included in this repository for detailed flow.
+
+---
+
+## Project Structure
+
 ```
-Odoo (UI)
-   |
-Backend (FastAPI / Python)
-   |
-Orchestrator (Brain)
-   |
-Multi-Agent System
-   |
-Response back to Odoo
-```
-
----
-
-## Core Components
-
-### Orchestrator
-- Central controller of the system
-- Decides which agent runs next
-- Maintains shared state
-
-### Agents
-
-Each agent has a single responsibility:
-
-| Agent | Responsibility |
-|---|---|
-| Classifier Agent | Understands and categorizes the ticket |
-| SLA Agent | Assigns deadlines based on priority |
-| Workload Agent | Assigns ticket to the best available owner |
-| Execution Agent | Resolves ticket using RAG + LLM |
-| Prediction Agent | Detects SLA breach risk |
-| Escalation Agent | Escalates if resolution is not possible |
-
----
-
-## Folder Structure
-
-### `app/` – Core Application
-
-#### `app/orchestrator/`
-Controls the entire workflow.
-
-- `orchestrator.py` – Main execution flow (calls agents)
-- `state.py` – Shared data between agents
-- `router.py` – Decision logic (what happens next)
-
-#### `app/agents/`
-All AI agents are defined here.
-
-- `base_agent.py` – Common structure for all agents
-
-Each subfolder represents one agent:
-
-- `classifier/` – Ticket understanding
-- `sla/` – SLA logic
-- `workload/` – Assignment logic
-- `execution/` – Resolution (primary agent)
-- `prediction/` – Risk detection
-- `escalation/` – Escalation handling
-
-Each agent reads and updates shared state.
-
-#### `app/integrations/`
-External system connectors.
-
-- `odoo/client.py` – Connect to Odoo API
-- `odoo/mapper.py` – Convert Odoo data to/from internal format
-- `bedrock/client.py` – Call AWS Bedrock models
-- `bedrock/embeddings.py` – Embeddings for RAG (vector search)
-
-#### `app/services/`
-Business logic layer.
-
-- `ticket_service.py` – Ticket handling
-- `sla_service.py` – SLA rules
-- `assignment_service.py` – Assignment logic
-
-#### `app/memory/`
-Stores agent interactions.
-
-- `session_store.py` – Current session state
-- `history.py` – Logs of decisions
-
-#### `app/db/`
-Database layer.
-
-- `models.py` – Data models
-- `repository.py` – DB operations
-- `connection.py` – DB connection
-
-#### `app/utils/`
-Common utilities.
-
-- `logger.py` – Logging
-- `config.py` – Environment configs
-- `helpers.py` – Helper functions
-
-#### `app/api/` (Optional)
-Expose backend as a service.
-
-- `routes.py` – API endpoints
-- `controllers.py` – Request handling
-
-### `data/`
-- `tickets.json` – Sample tickets
-- `knowledge_base/` – Used for RAG
-
-### `scripts/`
-- `run_worker.py` – Background worker
-- `seed_data.py` – Test data generation
-
-### `tests/`
-Basic test coverage.
-
-### Root Files
-- `.env` – Environment variables
-- `requirements.txt` – Dependencies
-- `README.md` – Documentation
-- `docker-compose.yml` – Optional container setup
-
----
-
-## How the System Works
-
-1. Ticket is created in Odoo
-2. Backend fetches the ticket
-3. Orchestrator starts
-4. Agents run in sequence: Classifier → SLA → Workload → Execution → Prediction → Escalation (if needed)
-5. Result is sent back to Odoo
-6. Ticket is updated
-
----
-
-## Shared State
-
-Every agent reads from and writes to a shared state object. Example:
-```json
-{
-  "ticket": "VPN not working",
-  "priority": 2,
-  "assigned_to": "Alice",
-  "resolution": "Restart VPN",
-  "risk_score": 0.3
-}
+agentic_sla_system/
+│
+├── app/
+│   ├── main.py
+│   ├── config/
+│   ├── monitoring/
+│   ├── ticketing/
+│   ├── orchestrator/
+│   ├── agents/
+│   ├── playbooks/
+│   ├── human_loop/
+│   ├── audit/
+│   └── utils/
+│
+├── scripts/
+├── tests/
+├── requirements.txt
 ```
 
 ---
 
-## Setup
+## Components
+
+### Monitoring Layer
+
+* Collects system metrics and logs
+* Triggers alerts based on predefined thresholds
+
+### Alert Handler
+
+* Processes alerts and formats them into structured events
+
+### Ticketing (Odoo Integration)
+
+* Automatically creates and updates incident tickets
+* Acts as the system of record for incident lifecycle
+
+### Agent Orchestrator
+
+* Coordinates the execution of agents
+* Routes tasks between agents based on workflow state
+
+### Analyzer Agent
+
+* Classifies incident type
+* Estimates impact
+* Predicts SLA breach risk
+
+### Decision Agent
+
+* Determines whether to auto-remediate or escalate
+* Uses confidence score and SLA urgency
+
+### Execution Agent
+
+* Executes remediation playbooks
+* Interacts with infrastructure (e.g., AWS via boto3)
+
+### Verification Agent
+
+* Validates system recovery
+* Confirms SLA compliance
+
+### Human Loop (Fallback)
+
+* Handles low-confidence scenarios requiring manual approval
+
+### Audit Module
+
+* Logs all actions, decisions, and outcomes
+* Enables traceability and compliance
+
+---
+
+## Workflow
+
+1. Monitoring system detects anomaly
+2. Alert is triggered and processed
+3. Ticket is automatically created in Odoo
+4. Orchestrator initiates agent workflow
+5. Analyzer evaluates issue and SLA risk
+6. Decision agent determines action:
+
+   * Autonomous remediation
+   * Human-assisted escalation
+7. Execution agent performs action
+8. Verification agent confirms recovery
+9. Ticket is updated or closed in Odoo
+10. All steps are logged in audit trail
+
+---
+
+## AWS Integration
+
+The system integrates with AWS for both event ingestion and execution:
+
+### Inbound
+
+* Alerts are forwarded via AWS Lambda
+* Lambda sends structured events to the application via HTTP endpoint
+
+### Outbound
+
+* Execution agent uses boto3 to perform actions such as:
+
+  * Restarting instances
+  * Scaling resources
+  * Managing services
+
+### Configuration
+
+* AWS credentials are managed using IAM roles or access keys
+* Local setup uses `aws configure`
+
+---
+
+## Installation
+
 ```bash
 pip install -r requirements.txt
 ```
 
-Configure the following credentials:
-- AWS Bedrock
-- Odoo API
+---
+
+## Running the System
+
+```bash
+python app/main.py
+```
 
 ---
 
-## Notes
+## Simulation
 
-- This is a proof of concept (POC) and is not production-hardened
-- Focus is on architecture and flow
-- Accuracy improves with better training data
+Use scripts to simulate incidents:
+
+```bash
+python scripts/simulate_cpu_issue.py
+python scripts/simulate_db_issue.py
+```
 
 ---
 
-## Why This Project Stands Out
+## Design Principles
 
-- True multi-agent system, not a simple chatbot
-- Real-world integration with Odoo
-- End-to-end automation from intake to resolution
-- Built-in decision-making and escalation logic
+* Modular agent-based architecture
+* Clear separation of concerns
+* Deterministic workflow with controlled branching
+* Minimal external dependencies
+* Extensible for additional agents and workflows
 
-## Authors
+---
 
-<div align="center">
+## Future Enhancements
 
-**Built with ❤️ by PhoenixCyberSec**
-
-⭐ **Star this repo if it helped you!** ⭐
-</div>
+* Real-time streaming integration (Kafka or Kinesis)
+* Advanced anomaly detection models
+* Dynamic playbook generation
+* Multi-tenant support
+* Dashboard for live agent monitoring
