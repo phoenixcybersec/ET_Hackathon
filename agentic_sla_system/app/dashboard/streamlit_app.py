@@ -56,6 +56,41 @@ PRIORITY_COLOR = {
     "Low":      "#22c55e",
 }
 
+# Gradient presets for grad_badge: index → CSS gradient
+GRAD_PRESETS = [
+    "linear-gradient(135deg,#f09433,#e6683c)",   # 0 – warm orange
+    "linear-gradient(135deg,#dc2743,#cc2366)",   # 1 – crimson-pink
+    "linear-gradient(135deg,#5851db,#833ab4)",   # 2 – indigo-purple
+    "linear-gradient(135deg,#667eea,#764ba2)",   # 3 – blue-purple
+    "linear-gradient(135deg,#00b09b,#96c93d)",   # 4 – teal-green
+    "linear-gradient(135deg,#f77062,#fe5196)",   # 5 – coral-pink
+]
+
+CATEGORY_GRAD = {
+    "Network":      0,
+    "Hardware":     1,
+    "Software":     2,
+    "Security":     3,
+    "Access":       4,
+    "Performance":  5,
+}
+
+PRIORITY_GRAD = {
+    "Critical": 1,
+    "High":     0,
+    "Medium":   2,
+    "Low":      4,
+}
+
+def grad_badge(label: str, preset_index: int) -> str:
+    grad = GRAD_PRESETS[preset_index % len(GRAD_PRESETS)]
+    return (
+        f'<span style="background:{grad};color:#fff;padding:5px 14px;'
+        f'border-radius:20px;font-size:12px;font-weight:700;'
+        f'letter-spacing:0.4px;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,.15)">'
+        f'{label}</span>'
+    )
+
 def stars(p):
     try:    p = int(p)
     except: p = 0
@@ -127,46 +162,106 @@ def render_pipeline(ticket):
 
 
 # ================================================================
-# SOP STEPS RENDERER  (Steps + SLA + Cost Impact)
+# AI ANALYSIS SECTION  (gradient card style — RAG-powered)
 # ================================================================
-def render_sop(suggestion: str):
-    if not suggestion:
-        st.info("No SOP suggestion available")
+def render_ai_section(ticket):
+    ai_issue    = ticket.get("ai_issue")
+    ai_answer   = ticket.get("ai_answer")
+    ai_sla      = ticket.get("ai_sla_rule")
+    ai_penalty  = ticket.get("ai_breach_penalty")
+    ai_suggest  = ticket.get("ai_suggestion")
+    confidence  = ticket.get("ai_confidence")
+    ai_category = ticket.get("ai_category", "")
+    ai_priority = ticket.get("ai_priority", "")
+
+    if not ai_issue:
+        st.markdown(
+            '<div style="background:#fafafa;border:1px dashed #dbdbdb;border-radius:12px;'
+            'padding:20px;color:#8e8e8e;text-align:center">⏳ AI analysis pending...</div>',
+            unsafe_allow_html=True
+        )
         return
 
-    lines      = [l.strip() for l in suggestion.strip().split("\n") if l.strip()]
-    steps      = []
-    sla_line   = ""
-    cost_line  = ""
+    # ── Badges ──────────────────────────────────────────────────
+    badges = ""
+    if ai_category:
+        badges += grad_badge(ai_category, CATEGORY_GRAD.get(ai_category, 0)) + "&nbsp;"
+    if ai_priority:
+        badges += grad_badge(ai_priority, PRIORITY_GRAD.get(ai_priority, 1)) + "&nbsp;"
+    if confidence is not None:
+        try:
+            pct = int(float(confidence) * 100)
+            badges += grad_badge(f"🎯 {pct}% confidence", 2)
+        except Exception:
+            pass
+    st.markdown(badges, unsafe_allow_html=True)
+    st.markdown("")
 
-    for line in lines:
-        ll = line.lower()
-        if any(k in ll for k in ["sla", "resolution time", "response time"]):
-            sla_line = line
-        elif any(k in ll for k in ["cost", "penalty", "₹", "$", "breach"]):
-            cost_line = line
-        else:
-            steps.append(line)
+    # ── Root Issue ───────────────────────────────────────────────
+    st.markdown(
+        f'<div style="background:linear-gradient(135deg,#ffecd2,#fcb69f);'
+        f'border-radius:14px;padding:14px 18px;margin:6px 0">'
+        f'<div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:4px">🔍 ROOT ISSUE</div>'
+        f'<div style="font-size:15px;font-weight:600;color:#262626">{ai_issue}</div>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
-    # Steps
-    st.markdown("**📋 Recommended SOP Steps:**")
-    for i, step in enumerate(steps, 1):
-        clean = step.lstrip("0123456789.-) ").strip()
-        if clean:
-            st.markdown(
-                f'<div style="padding:4px 0 4px 12px;border-left:3px solid #3b82f6;margin:4px 0">'
-                f'<b>{i}.</b> {clean}</div>',
+    # ── LLM Full Answer ─────────────────────────────────────────
+    if ai_answer:
+        st.markdown(
+            f'<div style="background:linear-gradient(135deg,#e0f7fa,#e8f5e9);'
+            f'border-radius:14px;padding:16px 20px;margin:8px 0">'
+            f'<div style="font-size:11px;font-weight:700;color:#00796b;margin-bottom:8px">🤖 AI ANALYSIS & RECOMMENDATION</div>'
+            f'<div style="font-size:14px;color:#262626;line-height:1.7">{ai_answer.replace(chr(10), "<br>")}</div>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
+    # ── SOP Steps ───────────────────────────────────────────────
+    if ai_suggest and ai_suggest != "—":
+        st.markdown(
+            '<div style="font-size:11px;font-weight:700;color:#5851db;margin:12px 0 6px 0">'
+            '📋 SOP STEPS FROM KNOWLEDGE BASE</div>',
+            unsafe_allow_html=True
+        )
+        lines = [l.strip() for l in ai_suggest.strip().split("\n") if l.strip()]
+        for i, line in enumerate(lines, 1):
+            clean = line.lstrip("0123456789.-) ").strip()
+            if clean:
+                colors = ["#f09433","#e6683c","#dc2743","#cc2366","#bc1888","#5851db"]
+                c = colors[(i - 1) % len(colors)]
+                st.markdown(
+                    f'<div style="display:flex;align-items:flex-start;gap:10px;'
+                    f'padding:8px 12px;margin:4px 0;border-radius:10px;background:#fafafa;'
+                    f'border-left:3px solid {c}">'
+                    f'<span style="color:{c};font-weight:800;min-width:20px">{i}.</span>'
+                    f'<span style="color:#262626;font-size:13px">{clean}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+
+    # ── SLA + Penalty ────────────────────────────────────────────
+    if ai_sla or ai_penalty:
+        s1, s2 = st.columns(2)
+        if ai_sla:
+            s1.markdown(
+                f'<div style="background:linear-gradient(135deg,#667eea,#764ba2);'
+                f'border-radius:14px;padding:14px 18px;color:#fff">'
+                f'<div style="font-size:10px;opacity:0.8;margin-bottom:4px">⏱️ SLA RULE</div>'
+                f'<div style="font-size:14px;font-weight:700">{ai_sla}</div>'
+                f'</div>',
                 unsafe_allow_html=True
             )
-
-    # SLA + Cost row
-    if sla_line or cost_line:
-        st.markdown("")
-        c1, c2 = st.columns(2)
-        if sla_line:
-            c1.success(f"⏱️ **SLA Rule:** {sla_line.lstrip('SLAsla: -').strip()}")
-        if cost_line:
-            c2.error(f"💰 **Cost / Penalty:** {cost_line.lstrip('Costcost: -').strip()}")
+        if ai_penalty:
+            s2.markdown(
+                f'<div style="background:linear-gradient(135deg,#f77062,#fe5196);'
+                f'border-radius:14px;padding:14px 18px;color:#fff">'
+                f'<div style="font-size:10px;opacity:0.8;margin-bottom:4px">💰 BREACH PENALTY</div>'
+                f'<div style="font-size:22px;font-weight:800">{ai_penalty}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
 
 # ================================================================
@@ -216,7 +311,8 @@ for col in ["final_decision", "requires_human", "approved_by_human",
             "human_executed", "verified", "verification_result",
             "ai_category", "ai_issue", "ai_priority",
             "ai_confidence", "ai_suggestion", "decision_reason",
-            "verification_notes", "human_action"]:
+            "verification_notes", "human_action",
+            "ai_answer", "ai_sla_rule", "ai_breach_penalty"]:
     if col not in df.columns:
         df[col] = None
 
@@ -359,18 +455,10 @@ for _, row in filtered.iterrows():
             f"**Created:** {ticket.get('created_at', '—')}"
         )
 
-        # ── AI Analysis ─────────────────────────────────────────
-        if ticket.get("ai_issue"):
-            st.markdown("---")
-            st.markdown("#### 🤖 AI Analysis")
-
-            a1, a2, a3 = st.columns(3)
-            a1.markdown(f"**🔍 Root Issue**  \n{ticket.get('ai_issue', '—')}")
-            a2.markdown(f"**📂 Category**  \n{ticket.get('ai_category', '—')}")
-            a3.markdown(f"**⚡ AI Priority**  \n{ai_pri or '—'}")
-
-            st.markdown("---")
-            render_sop(ticket.get("ai_suggestion", ""))
+        # ── AI Analysis (gradient card style) ───────────────────
+        st.markdown("---")
+        st.markdown("#### 🤖 AI Analysis")
+        render_ai_section(ticket)
 
         # ── Verification Result ─────────────────────────────────
         if verified is not None:
