@@ -77,3 +77,8 @@ config/config.yaml
 # Ignore the knowledge base data, but keep the .gitkeep file to maintain the directory structure
 agentic-ticketing-system/data/knowledge_base/*
 !agentic-ticketing-system/data/knowledge_base/.gitkeep
+
+__pycache__/
+*.db
+faiss_index/
+.env

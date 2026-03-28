@@ -1,31 +1,32 @@
 import sys
 import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import streamlit as st
+
+st.set_page_config(
+    page_title="Agentic SLA Dashboard",
+    layout="wide"
+)
+
 import sqlite3
 import pandas as pd
-from app.utils.logger import get_logger
 
-logger = get_logger()
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../tickets.db"))
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-DB_PATH = os.path.join(BASE_DIR, "tickets.db")
-
-@st.cache_resource
-def get_conn():
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
-
-conn = get_conn()
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 
 def load_data():
-    logger.info("Loading tickets for dashboard")
-    return pd.read_sql_query("SELECT * FROM tickets", conn)
+    return pd.read_sql_query("SELECT * FROM tickets ORDER BY updated_at DESC", conn)
 
 def stars(p):
-    return "★"*p + "☆"*(3-p)
+    try:
+        p = int(p)
+    except:
+        p = 0
+    return "★" * p + "☆" * (3 - p)
 
-st.set_page_config(layout="wide")
 st.title("Agentic SLA Dashboard")
 
 df = load_data()
@@ -35,16 +36,15 @@ if df.empty:
 else:
     for _, row in df.iterrows():
         st.markdown(f"""
-        ### {row['subject']} (#{row['ticket_id']})
-        
-        **Helpdesk Team:** {row['helpdesk_team']}  
-        **Assigned to:** {row['assigned_to']}  
-        **Customer:** {row['customer']}  
-        **Phone:** {row['phone']}  
-        **Priority:** {stars(row['priority'])}
-        
-        **Description:**  
-        {row['description']}
-        
-        ---
-        """)
+### {row.get('subject')} (#{row.get('ticket_id')})
+
+**Helpdesk Team:** {row.get('helpdesk_team')}  
+**Assigned to:** {row.get('assigned_to')}  
+**Customer:** {row.get('customer')}  
+**Phone:** {row.get('phone')}  
+**Priority:** {stars(row.get('priority'))}  
+**Tags:** {row.get('tags')}
+
+**Description:**  
+{row.get('description')}
+        )""")
