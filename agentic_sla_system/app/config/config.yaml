@@ -1,0 +1,17 @@
+odoo:
+  url: "https://phoenixdb.odoo.com/"
+  db: "phoenixdb"
+  username: "jyotiradityaparihar@gmail.com"
+  password: "f3c2650b7ca6a1c4e99c8eaf4c6e540816488a49"
+  model: "helpdesk.ticket"
+  limit: 100
+
+sync:
+  interval_seconds: 20
+
+db:
+  path: "tickets.db"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
