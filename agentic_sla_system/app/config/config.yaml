@@ -15,3 +15,11 @@ db:
 api:
   host: "0.0.0.0"
   port: 8000
+
+ollama:
+  url: "http://localhost:11434/api/generate"
+  model: "qwen2.5:3b"
+  timeout: 60
+
+knowledge_base:
+  path: "app/knowledge_base"
