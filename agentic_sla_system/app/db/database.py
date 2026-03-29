@@ -6,34 +6,41 @@ from app.utils.logger import get_logger
 logger = get_logger()
 config = load_config()
 
-_conn = None
+
+def get_db_path() -> str:
+    """Single source of truth for the DB file path."""
+    raw_path = config["db"]["path"]
+    if not os.path.isabs(raw_path):
+        repo_root = os.path.normpath(
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+        )
+        db_path = os.path.join(repo_root, raw_path)
+    else:
+        db_path = raw_path
+    return os.path.normpath(db_path)
 
 
-def get_connection():
-    global _conn
-    if _conn is None:
-        raw_path = config["db"]["path"]
+def get_connection() -> sqlite3.Connection:
+    """
+    FIX: was a global singleton — once closed anywhere in the process,
+    every subsequent caller got 'Cannot operate on a closed database'.
 
-        if not os.path.isabs(raw_path):
-            repo_root = os.path.normpath(
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-            )
-            db_path = os.path.join(repo_root, raw_path)
-        else:
-            db_path = raw_path
-
-        db_path = os.path.normpath(db_path)
-        logger.info("Connecting to SQLite DB")
-        logger.info(f"DB path resolved: {db_path}")
-        _conn = sqlite3.connect(db_path, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
-        _conn.execute("PRAGMA foreign_keys=ON")
-    return _conn
+    Now returns a fresh connection on every call.
+    Callers are responsible for calling conn.close() when done.
+    WAL mode is set so multiple threads can read while one writes.
+    """
+    db_path = get_db_path()
+    logger.info(f"DB path resolved: {db_path}")
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+    return conn
 
 
 def init_db():
     logger.info("🔥 INIT DB CALLED")
+    logger.info("Connecting to SQLite DB")
     conn = get_connection()
 
     conn.execute("""
@@ -54,6 +61,7 @@ def init_db():
     """)
 
     conn.commit()
+    conn.close()
     logger.info("✅ Base table created")
 
 
@@ -81,14 +89,18 @@ def init_ai_columns():
         ("verification_notes",  "TEXT"),
         ("verified",            "INTEGER"),
         ("execution_route",     "TEXT"),
-        # ── gate flag: set to 1 after classifier completes, never reset by sync ──
         ("is_classified",       "INTEGER DEFAULT 0"),
+        ("execution_action",    "TEXT"),
+        ("execution_status",    "TEXT"),
+        ("execution_output",    "TEXT"),
+        ("execution_time",      "TEXT"),
     ]:
         try:
             conn.execute(f"ALTER TABLE tickets ADD COLUMN {col} {coltype}")
             logger.info(f"✅ Added column: {col}")
         except Exception:
-            pass  # already exists after first run
+            pass  # already exists — safe to ignore
 
     conn.commit()
+    conn.close()
     logger.info("✅ AI columns ready")

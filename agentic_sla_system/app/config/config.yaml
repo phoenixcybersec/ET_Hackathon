@@ -1,7 +1,7 @@
 odoo:
-  url: "https://phoenixdb.odoo.com/"
-  db: "phoenixdb"
-  username: "jyotiradityaparihar@gmail.com"
+  url: ""
+  db: ""
+  username: ""
   password: ""
   model: "helpdesk.ticket"
   limit: 100
@@ -22,7 +22,7 @@ llm:
   api_key: ""
   model: "gpt-4o-mini"
   temperature: 0.1
-  max_tokens: 400
+  max_tokens: 700
   timeout: 60
   response_format: "json_object"
 

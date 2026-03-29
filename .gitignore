@@ -4,7 +4,23 @@
 .env
 .env.*
 *.env
+*.secret
+*.key
+*.pem
+*.p12
+*.crt
 
+# AWS / CLOUD CONFIG
+.aws/
+aws_config.yaml
+aws_config.yml
+aws_config.ini
+
+# Any config with secrets
+config/*.yaml
+config/*.yml
+config/*.ini
+!config/config.example.yaml   # keep safe template only
 
 # =========================
 # DATABASE
