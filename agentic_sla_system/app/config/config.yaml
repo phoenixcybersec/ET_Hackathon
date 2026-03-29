@@ -1,0 +1,50 @@
+odoo:
+  url: "https://phoenixdb.odoo.com/"
+  db: "phoenixdb"
+  username: "jyotiradityaparihar@gmail.com"
+  password: ""
+  model: "helpdesk.ticket"
+  limit: 100
+
+sync:
+  interval_seconds: 20
+
+db:
+  path: "tickets.db"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+
+llm:
+  provider: "openai"
+  api_key: ""
+  model: "gpt-4o-mini"
+  temperature: 0.1
+  max_tokens: 400
+  timeout: 60
+  response_format: "json_object"
+
+  system_prompt: |
+    You are an IT helpdesk classifier.
+    Always respond with valid JSON only.
+    Never include markdown fences or extra text.
+
+
+ollama:
+  url: "http://localhost:11434/api/generate"
+  model: "qwen2.5:3b"
+  timeout: 60
+
+knowledge_base:
+  path: "app/knowledge_base"
+
+
+# meta-llama/llama-3.3-70b-instruct:free
+# google/gemma-3-27b-it:free
+# google/gemma-3-12b-it:free
+# deepseek/deepseek-chat-v3-0324:free
+# mistralai/mistral-small-3.1-24b-instruct:free
+# openrouter/auto
+

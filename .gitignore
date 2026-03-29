@@ -5,10 +5,6 @@
 .env.*
 *.env
 
-# =========================
-# CONFIG (IMPORTANT)
-# =========================
-agentic_sla_system/app/config/config.yaml
 
 # =========================
 # DATABASE
