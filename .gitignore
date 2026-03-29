@@ -1,84 +1,85 @@
-# Environment variables
+# =========================
+# ENV / SECRETS
+# =========================
 .env
 .env.*
+*.env
 
-# Python cache
+# =========================
+# CONFIG (IMPORTANT)
+# =========================
+agentic_sla_system/app/config/config.yaml
+
+# =========================
+# DATABASE
+# =========================
+*.db
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# =========================
+# PYTHON
+# =========================
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
+# =========================
+# VIRTUAL ENV
+# =========================
 venv/
 env/
 .venv/
 
-# Testing / coverage
+# =========================
+# LOGS
+# =========================
+logs/
+*.log
+
+# =========================
+# TEST / CACHE
+# =========================
 .coverage
 coverage.xml
 htmlcov/
 .pytest_cache/
 
-# Jupyter notebooks (if you experiment)
-.ipynb_checkpoints/
-
-# Database files
-*.sqlite3
-*.db
-
-# Logs
-logs/
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE / Editor files
+# =========================
+# IDE / OS
+# =========================
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
 *.swp
 *.swo
 
-# Docker
-docker-compose.override.yml
-
-# Build / distribution
+# =========================
+# BUILD
+# =========================
 build/
 dist/
 *.egg-info/
 
-# AWS credentials (VERY IMPORTANT)
-.aws/
-credentials
-
-# Vector DB / embeddings (FAISS etc.)
+# =========================
+# DATA / VECTOR STORE
+# =========================
 *.index
 *.faiss
 vector_store/
+faiss_index/
 
-# Temporary files
+# =========================
+# TEMP
+# =========================
 tmp/
 temp/
-
-# Data files (optional - depends on use)
-data/knowledge_base/*
-!data/knowledge_base/.gitkeep
-
-# Local scripts outputs
 outputs/
 
-# Model artifacts (if any)
-models/
-checkpoints/
-
-# Config overrides (if you have local config files)
-config/config.yaml 
-
-# Ignore the knowledge base data, but keep the .gitkeep file to maintain the directory structure
-agentic-ticketing-system/data/knowledge_base/*
-!agentic-ticketing-system/data/knowledge_base/.gitkeep
-
-__pycache__/
-*.db
-faiss_index/
-.env
+# =========================
+# OPTIONAL DATA
+# =========================
+data/knowledge_base/*
+!data/knowledge_base/.gitkeep
